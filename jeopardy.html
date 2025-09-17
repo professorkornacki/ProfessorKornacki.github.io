@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLSC 110 Jeopardy</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            margin: 0;
+            padding: 20px;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .title {
+            font-size: 3em;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: auto repeat(4, 1fr);
+            gap: 2px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #000;
+            padding: 2px;
+            border-radius: 10px;
+        }
+        
+        .category {
+            background: #0066cc;
+            color: white;
+            text-align: center;
+            padding: 15px 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+            border-radius: 5px;
+        }
+        
+        .question-cell {
+            background: #003d7a;
+            color: #ffd700;
+            text-align: center;
+            padding: 20px 5px;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+        }
+        
+        .question-cell:hover {
+            background: #0066cc;
+            transform: scale(1.05);
+        }
+        
+        .question-cell.answered {
+            background: #333;
+            color: #666;
+            cursor: default;
+            pointer-events: none;
+        }
+        
+        .scoreboard {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            width: 90%;
+            max-width: 1000px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .scoreboard h3 {
+            margin: 0 15px 0 0;
+            color: #ffd700;
+            white-space: nowrap;
+        }
+        
+        .scores-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .team-score {
+            display: flex;
+            justify-content: space-between;
+            margin: 0;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            min-width: 90px;
+        }
+        
+        .team-name {
+            font-weight: bold;
+        }
+        
+        .team-controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .team-btn {
+            background: #ffd700;
+            color: #003d7a;
+            border: none;
+            padding: 8px 15px;
+            margin: 2px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .team-btn:hover {
+            background: #ffed4a;
+        }
+        
+        .reset-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 10px 2px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .reset-btn:hover {
+            background: #ff6666;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .question-text {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        
+        .answer-text {
+            font-size: 1.4em;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        
+        button {
+            background: #ffd700;
+            color: #003d7a;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #ffed4a;
+            transform: translateY(-2px);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">JEOPARDY!</div>
+        <div class="subtitle">POLSC 110: American Government & Politics</div>
+    </div>
+    
+    <div class="scoreboard">
+        <h3>Team Scores</h3>
+        <div class="scores-container">
+            <div class="team-score">
+                <span class="team-name">Team 1:</span>
+                <span>$<span id="team1-score">0</span></span>
+            </div>
+            <div class="team-score">
+                <span class="team-name">Team 2:</span>
+                <span>$<span id="team2-score">0</span></span>
+            </div>
+            <div class="team-score">
+                <span class="team-name">Team 3:</span>
+                <span>$<span id="team3-score">0</span></span>
+            </div>
+            <div class="team-score">
+                <span class="team-name">Team 4:</span>
+                <span>$<span id="team4-score">0</span></span>
+            </div>
+            <div class="team-score">
+                <span class="team-name">Team 5:</span>
+                <span>$<span id="team5-score">0</span></span>
+            </div>
+            <div class="team-score">
+                <span class="team-name">Team 6:</span>
+                <span>$<span id="team6-score">0</span></span>
+            </div>
+        </div>
+        <div class="team-controls">
+            <div style="margin-bottom: 10px; color: #ffd700; font-weight: bold;">Award Points:</div>
+            <button class="team-btn" onclick="setActiveTeam(1)">Team 1</button>
+            <button class="team-btn" onclick="setActiveTeam(2)">Team 2</button>
+            <button class="team-btn" onclick="setActiveTeam(3)">Team 3</button>
+            <button class="team-btn" onclick="setActiveTeam(4)">Team 4</button>
+            <button class="team-btn" onclick="setActiveTeam(5)">Team 5</button>
+            <button class="team-btn" onclick="setActiveTeam(6)">Team 6</button>
+            <button class="reset-btn" onclick="resetScores()">Reset</button>
+        </div>
+    </div>
+    
+    <div class="board" id="board">
+        <!-- Board will be created by JavaScript -->
+    </div>
+    
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="question-text" id="question-text"></div>
+            <button onclick="showAnswer()">Show Answer</button>
+            <div class="answer-text" id="answer-text"></div>
+            <button onclick="correctAnswer()" style="display:none;" id="correct-btn">Correct (+Points)</button>
+            <button onclick="wrongAnswer()" style="display:none;" id="wrong-btn">Incorrect (No Points)</button>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const questions = {
+            'COLONIAL TENSIONS': [
+                { value: 200, question: "This 1775 proclamation by a British governor granted freedom to enslaved people who served in the royal military against colonial rebels.", answer: "What is Lord Dunmore's Proclamation?" },
+                { value: 400, question: "British policies that suppressed colonial manufacturing, independent trade, and crop diversification were based on this economic theory.", answer: "What is mercantilism?" },
+                { value: 600, question: "This British policy of arming Indigenous groups was used to halt colonial expansion and suppress rebellion.", answer: "What is the Crown's policy of arming Indigenous groups?" },
+                { value: 800, question: "Britain's recognition of this aspect of their slave-based economy partly motivated their movement toward abolition.", answer: "What is the fragility of the slave economy?" }
+            ],
+            'FOUNDING DOCUMENTS': [
+                { value: 200, question: "This philosophical belief system, held by leaders like Jefferson and Franklin, maintained that a supreme being governs all matter but remains distinct from the universe.", answer: "What is Deism?" },
+                { value: 400, question: "The Declaration's principle that people possess these universal rights that cannot be taken away by government.", answer: "What are natural rights?" },
+                { value: 600, question: "Jefferson's original draft criticized the king for this 'most criminal act,' which Benjamin Banneker later used to challenge Jefferson's hypocrisy.", answer: "What is slavery/the slave trade?" },
+                { value: 800, question: "The Declaration asserts independence through this concept, where government legitimacy depends on citizen approval.", answer: "What is consent of the governed/social contract theory?" }
+            ],
+            'EARLY GOVERNMENT': [
+                { value: 200, question: "This first U.S. constitution created a unicameral system with no executive or judicial power.", answer: "What are the Articles of Confederation?" },
+                { value: 400, question: "This 1787 legislation created the process for territories to become states and prohibited slavery in the Northwest Territory.", answer: "What is the Northwest Ordinance?" },
+                { value: 600, question: "This Massachusetts uprising saw 25% of adult men participate and highlighted the need for stronger federal government.", answer: "What is Shay's Rebellion?" },
+                { value: 800, question: "The economic elite provided this type of support to help Massachusetts violently suppress the farmer uprising of 1786-7.", answer: "What is funding?" }
+            ],
+            'CONSTITUTIONAL CONVENTION': [
+                { value: 200, question: "This plan proposed equal state representation with a unicameral legislature and simple majority for legislation.", answer: "What is the New Jersey Plan?" },
+                { value: 400, question: "This compromise balanced power between large and small states through a bicameral legislature.", answer: "What is the Connecticut Compromise?" },
+                { value: 600, question: "The Constitution grants Congress this broad power to create laws needed to execute its enumerated powers.", answer: "What is the Necessary and Proper Clause/Elastic Clause?" },
+                { value: 800, question: "This constitutional principle ensures that federal law takes precedence when conflicts arise with state law.", answer: "What is the Supremacy Clause?" }
+            ],
+            'FEDERALISM EVOLUTION': [
+                { value: 200, question: "This 1830s crisis involved South Carolina threatening secession over tariffs before being resolved through compromise.", answer: "What is the Nullification Crisis?" },
+                { value: 400, question: "During this period (1870s-1932), federal powers were limited to enumerated ones while states' rights were strengthened.", answer: "What is Dual Federalism?" },
+                { value: 600, question: "This New Deal-era approach involved federal funding with minimum standards while states administered programs.", answer: "What is Cooperative Federalism?" },
+                { value: 800, question: "This 1970s-1990s movement involved shifting power back to state and local governments through block grants.", answer: "What is New Federalism/devolution?" }
+            ],
+            'RECONSTRUCTION ERA': [
+                { value: 200, question: "This amendment abolished slavery except as punishment for crime.", answer: "What is the 13th Amendment?" },
+                { value: 400, question: "This 1866 act established equal citizenship rights for all Americans.", answer: "What is the Civil Rights Act of 1866?" },
+                { value: 600, question: "This 1867 legislation created military districts in the South to enforce Reconstruction policies.", answer: "What are the Reconstruction Acts of 1867?" },
+                { value: 800, question: "This 1875 act prohibited discrimination in transportation and juries but was later weakened by the Supreme Court.", answer: "What is the Civil Rights Act of 1875?" }
+            ],
+            'CONGRESSIONAL STRUCTURE': [
+                { value: 200, question: "This 1929 act capped the House of Representatives at its current number of members.", answer: "What is the Reapportionment Act of 1929?" },
+                { value: 400, question: "This constitutional amendment changed Senate elections from state legislature appointment to direct popular vote.", answer: "What is the 17th Amendment?" },
+                { value: 600, question: "This model of representation suggests lawmakers should use their own judgment about constituents' best interests.", answer: "What is the trustee model?" },
+                { value: 800, question: "During this historical period (1950s-70s), congressional polarization preceded mass polarization by decades.", answer: "What is the Great Broadening?" }
+            ],
+            'LEGISLATIVE PROCESS': [
+                { value: 200, question: "In the House, this committee sets the rules for floor debate on legislation.", answer: "What is the House Rules Committee?" },
+                { value: 400, question: "This Senate procedure allows unlimited debate to prevent voting on a bill.", answer: "What is the filibuster?" },
+                { value: 600, question: "This 1974 process allows simple majority passage in the Senate for budget-related legislation, avoiding the filibuster.", answer: "What is budget reconciliation?" },
+                { value: 800, question: "This practice involves trading votes for desired local project funding, totaling $18.9 billion in 2022.", answer: "What is pork barrel spending/earmarks?" }
+            ]
+        };
+
+        // Game state
+        let teamScores = [0, 0, 0, 0, 0, 0];
+        let activeTeam = null;
+        let currentQuestion = null;
+
+        function setActiveTeam(teamNumber) {
+            activeTeam = teamNumber;
+            document.querySelectorAll('.team-btn').forEach(btn => {
+                btn.style.background = '#ffd700';
+            });
+            event.target.style.background = '#ffed4a';
+        }
+
+        function updateTeamScore(teamNumber, points) {
+            teamScores[teamNumber - 1] += points;
+            document.getElementById('team' + teamNumber + '-score').textContent = teamScores[teamNumber - 1];
+        }
+
+        function resetScores() {
+            if (confirm('Are you sure you want to reset all team scores?')) {
+                teamScores = [0, 0, 0, 0, 0, 0];
+                for (let i = 1; i <= 6; i++) {
+                    document.getElementById('team' + i + '-score').textContent = 0;
+                }
+                activeTeam = null;
+                document.querySelectorAll('.team-btn').forEach(btn => {
+                    btn.style.background = '#ffd700';
+                });
+            }
+        }
+
+        function createBoard() {
+            const board = document.getElementById('board');
+            const categories = Object.keys(questions);
+            
+            board.innerHTML = '';
+            
+            // Add category headers
+            categories.forEach(category => {
+                const categoryCell = document.createElement('div');
+                categoryCell.className = 'category';
+                categoryCell.textContent = category;
+                board.appendChild(categoryCell);
+            });
+            
+            // Add question cells row by row
+            for (let row = 0; row < 4; row++) {
+                categories.forEach(category => {
+                    const cell = document.createElement('div');
+                    cell.className = 'question-cell';
+                    cell.textContent = '$' + questions[category][row].value;
+                    cell.onclick = function() { openQuestion(category, row); };
+                    board.appendChild(cell);
+                });
+            }
+        }
+
+        function openQuestion(category, index) {
+            if (event.target.classList.contains('answered')) return;
+            
+            currentQuestion = {
+                category: category,
+                index: index,
+                value: questions[category][index].value,
+                element: event.target
+            };
+            
+            document.getElementById('question-text').textContent = questions[category][index].question;
+            document.getElementById('answer-text').textContent = questions[category][index].answer;
+            document.getElementById('answer-text').style.display = 'none';
+            document.getElementById('correct-btn').style.display = 'none';
+            document.getElementById('wrong-btn').style.display = 'none';
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        function showAnswer() {
+            document.getElementById('answer-text').style.display = 'block';
+            document.getElementById('correct-btn').style.display = 'inline-block';
+            document.getElementById('wrong-btn').style.display = 'inline-block';
+            event.target.style.display = 'none';
+        }
+
+        function correctAnswer() {
+            if (activeTeam === null) {
+                alert('Please select which team answered correctly first!');
+                return;
+            }
+            updateTeamScore(activeTeam, currentQuestion.value);
+            currentQuestion.element.classList.add('answered');
+            currentQuestion.element.textContent = '✓';
+            closeModal();
+        }
+
+        function wrongAnswer() {
+            currentQuestion.element.classList.add('answered');
+            currentQuestion.element.textContent = '✗';
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Event listeners
+        document.querySelector('.close').onclick = closeModal;
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('modal')) {
+                closeModal();
+            }
+        }
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            createBoard();
+        });
+    </script>
+</body>
+</html>
